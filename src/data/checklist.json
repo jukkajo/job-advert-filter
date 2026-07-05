@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "name": "Default job advert checklist",
+  "rules": [
+    {
+      "id": "hard-blocker-unpaid-work",
+      "severity": "HARD_BLOCKER",
+      "label": "Unpaid work",
+      "description": "The role explicitly says it is unpaid.",
+      "keywords": ["unpaid", "no pay", "volunteer role", "voluntary role"]
+    },
+    {
+      "id": "hard-blocker-commission-only",
+      "severity": "HARD_BLOCKER",
+      "label": "Commission only",
+      "description": "The role pays only commission.",
+      "keywords": ["commission only", "100% commission", "pure commission"]
+    },
+    {
+      "id": "hard-blocker-relocation-required",
+      "severity": "HARD_BLOCKER",
+      "label": "Relocation required",
+      "description": "The role requires relocation.",
+      "keywords": ["must relocate", "relocation required", "relocation is required"]
+    },
+    {
+      "id": "concern-salary-hidden",
+      "severity": "CONCERN",
+      "label": "Salary not disclosed",
+      "description": "The advert does not give a clear salary signal.",
+      "keywords": ["salary not disclosed", "no salary", "competitive salary"]
+    },
+    {
+      "id": "concern-onsite-only",
+      "severity": "CONCERN",
+      "label": "On-site only",
+      "description": "The role is tied to the office.",
+      "keywords": ["onsite", "on-site", "office only"]
+    },
+    {
+      "id": "concern-contract-only",
+      "severity": "CONCERN",
+      "label": "Contract position",
+      "description": "The advert describes a fixed-term contract.",
+      "keywords": ["contract", "fixed term", "temporary"]
+    },
+    {
+      "id": "concern-travel-required",
+      "severity": "CONCERN",
+      "label": "Travel required",
+      "description": "The role expects regular travel.",
+      "keywords": ["travel required", "frequent travel", "regular travel"]
+    },
+    {
+      "id": "concern-on-call",
+      "severity": "CONCERN",
+      "label": "On-call duty",
+      "description": "The role includes on-call coverage.",
+      "keywords": ["on call", "on-call", "24/7 support"]
+    },
+    {
+      "id": "concern-overtime",
+      "severity": "CONCERN",
+      "label": "Overtime expected",
+      "description": "The advert signals long hours or weekend work.",
+      "keywords": ["overtime", "long hours", "evenings and weekends"]
+    },
+    {
+      "id": "strong-positive-remote-friendly",
+      "severity": "STRONG_POSITIVE",
+      "label": "Remote-friendly",
+      "description": "The role supports remote work.",
+      "keywords": ["remote", "remote role", "remote-friendly", "work from home"]
+    },
+    {
+      "id": "strong-positive-salary-disclosed",
+      "severity": "STRONG_POSITIVE",
+      "label": "Salary disclosed",
+      "description": "The advert gives a salary range or salary signal.",
+      "keywords": ["salary range", "salary listed", "salary disclosed"]
+    },
+    {
+      "id": "strong-positive-flexible-hours",
+      "severity": "STRONG_POSITIVE",
+      "label": "Flexible hours",
+      "description": "The advert mentions flexible scheduling.",
+      "keywords": ["flexible hours", "flexible schedule", "flex time"]
+    },
+    {
+      "id": "strong-positive-visa-sponsorship",
+      "severity": "STRONG_POSITIVE",
+      "label": "Visa sponsorship",
+      "description": "The employer offers sponsorship.",
+      "keywords": ["visa sponsorship", "sponsorship available"]
+    },
+    {
+      "id": "strong-positive-growth-opportunities",
+      "severity": "STRONG_POSITIVE",
+      "label": "Growth opportunities",
+      "description": "The advert supports development and progression.",
+      "keywords": ["growth opportunities", "career growth", "learning opportunities"]
+    },
+    {
+      "id": "bonus-learning-budget",
+      "severity": "BONUS",
+      "label": "Learning budget",
+      "description": "The company invests in learning and development.",
+      "keywords": ["learning budget", "training budget", "conference budget"]
+    },
+    {
+      "id": "bonus-equity",
+      "severity": "BONUS",
+      "label": "Equity",
+      "description": "The package includes equity or stock options.",
+      "keywords": ["equity", "stock options"]
+    },
+    {
+      "id": "bonus-health-benefits",
+      "severity": "BONUS",
+      "label": "Health benefits",
+      "description": "The advert mentions health-related benefits.",
+      "keywords": ["health insurance", "dental insurance", "private medical"]
+    },
+    {
+      "id": "bonus-pension",
+      "severity": "BONUS",
+      "label": "Pension",
+      "description": "The role includes pension or retirement support.",
+      "keywords": ["pension", "retirement plan"]
+    },
+    {
+      "id": "bonus-four-day-week",
+      "severity": "BONUS",
+      "label": "Four-day week",
+      "description": "The company offers a shorter working week.",
+      "keywords": ["four-day week", "4-day week", "compressed week"]
+    },
+    {
+      "id": "bonus-equipment-provided",
+      "severity": "BONUS",
+      "label": "Equipment provided",
+      "description": "The employer supplies work equipment or a stipend.",
+      "keywords": ["equipment provided", "laptop provided", "home office stipend"]
+    }
+  ]
+}
