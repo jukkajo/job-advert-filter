@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { analyzeJobAdvert } from "../src/lib/analyzeJobAdvert";
+import {
+  analyzeJobAdvert,
+  analyzeJobAdvertWithChecklist,
+  type ChecklistConfig,
+} from "../src/lib/analyzeJobAdvert";
 
 describe("analyzeJobAdvert", () => {
   it("returns DO_NOT_APPLY when a hard blocker is present", () => {
@@ -56,5 +60,178 @@ describe("analyzeJobAdvert", () => {
     expect(result.strongPositives).toHaveLength(2);
     expect(result.strongPositives[0].matchedKeywords).toEqual(["remote"]);
     expect(result.strongPositives[1].matchedKeywords).toEqual(["salary range"]);
+  });
+
+  it("matches normalized keyword variations in a sample advert", () => {
+    const checklist: ChecklistConfig = {
+      version: 1,
+      rules: [
+        {
+          id: "positive-node",
+          severity: "STRONG_POSITIVE",
+          label: "Node.js",
+          keywords: ["node.js"],
+        },
+        {
+          id: "positive-fullstack",
+          severity: "STRONG_POSITIVE",
+          label: "Full stack",
+          keywords: ["full stack"],
+        },
+        {
+          id: "positive-postgres",
+          severity: "STRONG_POSITIVE",
+          label: "PostgreSQL",
+          keywords: ["postgresql"],
+        },
+        {
+          id: "positive-cicd",
+          severity: "STRONG_POSITIVE",
+          label: "CI/CD",
+          keywords: ["ci/cd"],
+        },
+        {
+          id: "positive-api",
+          severity: "STRONG_POSITIVE",
+          label: "API",
+          keywords: ["api"],
+        },
+        {
+          id: "positive-migration",
+          severity: "STRONG_POSITIVE",
+          label: "Migration",
+          keywords: ["migration"],
+        },
+        {
+          id: "positive-remote-first",
+          severity: "STRONG_POSITIVE",
+          label: "Remote-first",
+          keywords: ["remote-first"],
+        },
+      ],
+    };
+
+    const result = analyzeJobAdvertWithChecklist(
+      [
+        "  REMOTE   FIRST team building fullstack NodeJS services and APIs.  ",
+        "You will own migrations, improve CICD, and work on Postgres-backed systems.",
+      ].join(" "),
+      checklist,
+    );
+
+    expect(result.recommendation).toBe("APPLY");
+    expect(result.score).toBe(175);
+    expect(result.strongPositives.map((rule) => rule.id)).toEqual([
+      "positive-node",
+      "positive-fullstack",
+      "positive-postgres",
+      "positive-cicd",
+      "positive-api",
+      "positive-migration",
+      "positive-remote-first",
+    ]);
+  });
+
+  it("matches the reverse form of supported variations", () => {
+    const checklist: ChecklistConfig = {
+      version: 1,
+      rules: [
+        {
+          id: "positive-node",
+          severity: "STRONG_POSITIVE",
+          label: "Node.js",
+          keywords: ["nodejs"],
+        },
+        {
+          id: "positive-fullstack",
+          severity: "STRONG_POSITIVE",
+          label: "Full stack",
+          keywords: ["fullstack"],
+        },
+        {
+          id: "positive-postgres",
+          severity: "STRONG_POSITIVE",
+          label: "Postgres",
+          keywords: ["postgres"],
+        },
+        {
+          id: "positive-cicd",
+          severity: "STRONG_POSITIVE",
+          label: "CI/CD",
+          keywords: ["cicd"],
+        },
+        {
+          id: "positive-api",
+          severity: "STRONG_POSITIVE",
+          label: "APIs",
+          keywords: ["apis"],
+        },
+        {
+          id: "positive-migration",
+          severity: "STRONG_POSITIVE",
+          label: "Migrations",
+          keywords: ["migrations"],
+        },
+        {
+          id: "positive-remote-first",
+          severity: "STRONG_POSITIVE",
+          label: "Remote first",
+          keywords: ["remote first"],
+        },
+      ],
+    };
+
+    const result = analyzeJobAdvertWithChecklist(
+      "Node.js platform for a full-stack team with PostgreSQL, CI/CD, API design, migration work, and a remote-first culture.",
+      checklist,
+    );
+
+    expect(result.strongPositives).toHaveLength(7);
+    expect(result.score).toBe(175);
+  });
+
+  it("matches whole words for short keywords", () => {
+    const checklist: ChecklistConfig = {
+      version: 1,
+      rules: [
+        {
+          id: "positive-api",
+          severity: "STRONG_POSITIVE",
+          label: "API",
+          keywords: ["api"],
+        },
+      ],
+    };
+
+    const result = analyzeJobAdvertWithChecklist(
+      "We care about rapid delivery and durable integrations.",
+      checklist,
+    );
+
+    expect(result.strongPositives).toHaveLength(0);
+    expect(result.score).toBe(0);
+  });
+
+  it("deduplicates equivalent keyword variations for one checklist item", () => {
+    const checklist: ChecklistConfig = {
+      version: 1,
+      rules: [
+        {
+          id: "positive-node",
+          severity: "STRONG_POSITIVE",
+          label: "Node.js",
+          keywords: ["node.js", "nodejs"],
+        },
+      ],
+    };
+
+    const result = analyzeJobAdvertWithChecklist(
+      "Node.js experience is required. NodeJS services power the platform.",
+      checklist,
+    );
+
+    expect(result.strongPositives).toHaveLength(1);
+    expect(result.strongPositives[0].matchedKeywords).toEqual(["node.js"]);
+    expect(result.score).toBe(25);
   });
 });

@@ -53,24 +53,77 @@ const checklist = checklistData as ChecklistConfig;
 
 export const defaultChecklist = checklist;
 
+const keywordVariationFamilies = [
+  ["node js", "nodejs"],
+  ["full stack", "fullstack"],
+  ["postgresql", "postgres"],
+  ["ci cd", "cicd"],
+  ["api", "apis"],
+  ["migration", "migrations"],
+  ["remote first", "remotefirst"],
+] as const;
+
+const keywordVariationLookup = new Map<string, readonly string[]>();
+
+for (const family of keywordVariationFamilies) {
+  for (const variation of family) {
+    keywordVariationLookup.set(variation, family);
+  }
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function normalizeForSearch(value: string): string {
-  return value.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function buildKeywordPattern(keyword: string): RegExp | null {
-  const trimmed = normalizeForSearch(keyword);
+function expandKeywordVariants(keyword: string): string[] {
+  const normalizedKeyword = normalizeForSearch(keyword);
 
-  if (!trimmed) {
+  if (!normalizedKeyword) {
+    return [];
+  }
+
+  const variants = new Set<string>([normalizedKeyword]);
+
+  if (normalizedKeyword.includes(" ")) {
+    variants.add(normalizedKeyword.replace(/\s+/g, ""));
+  }
+
+  const family = keywordVariationLookup.get(normalizedKeyword);
+
+  if (family) {
+    for (const variation of family) {
+      variants.add(variation);
+    }
+  }
+
+  return [...variants];
+}
+
+function buildKeywordPattern(keyword: string): { matchKey: string; pattern: RegExp } | null {
+  const variants = expandKeywordVariants(keyword);
+
+  if (variants.length === 0) {
     return null;
   }
 
-  const pattern = escapeRegExp(trimmed).replace(/\s+/g, "\\s+");
+  const sortedVariants = [...variants].sort((left, right) => right.length - left.length);
+  const pattern = sortedVariants
+    .map((variant) => escapeRegExp(variant).replace(/\s+/g, "\\s+"))
+    .join("|");
 
-  return new RegExp(`\\b${pattern}\\b`, "i");
+  return {
+    matchKey: [...variants].sort().join("|"),
+    pattern: new RegExp(`(?:^|\\s)(?:${pattern})(?=$|\\s)`, "u"),
+  };
 }
 
 function findMatchedKeywords(text: string, keywords: string[]): string[] {
@@ -78,20 +131,18 @@ function findMatchedKeywords(text: string, keywords: string[]): string[] {
   const seen = new Set<string>();
 
   for (const keyword of keywords) {
-    const pattern = buildKeywordPattern(keyword);
+    const matcher = buildKeywordPattern(keyword);
 
-    if (!pattern) {
+    if (!matcher) {
       continue;
     }
 
-    const normalizedKeyword = normalizeForSearch(keyword);
-
-    if (seen.has(normalizedKeyword)) {
+    if (seen.has(matcher.matchKey)) {
       continue;
     }
 
-    if (pattern.test(text)) {
-      seen.add(normalizedKeyword);
+    if (matcher.pattern.test(text)) {
+      seen.add(matcher.matchKey);
       matchedKeywords.push(keyword);
     }
   }
