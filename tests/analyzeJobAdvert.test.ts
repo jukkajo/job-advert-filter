@@ -18,7 +18,7 @@ describe("analyzeJobAdvert", () => {
     expect(result.concerns).toHaveLength(0);
     expect(result.strongPositives).toHaveLength(2);
     expect(result.bonuses).toHaveLength(0);
-    expect(result.explanation).toContain("Recommendation forced to DO_NOT_APPLY");
+    expect(result.explanation).toContain("Recommendation: DO_NOT_APPLY");
   });
 
   it("returns APPLY for a strong positive advert", () => {
@@ -233,5 +233,103 @@ describe("analyzeJobAdvert", () => {
     expect(result.strongPositives).toHaveLength(1);
     expect(result.strongPositives[0].matchedKeywords).toEqual(["node.js"]);
     expect(result.score).toBe(25);
+  });
+
+  it("does not treat negated negative phrases as blockers or concerns", () => {
+    const result = analyzeJobAdvert(
+      [
+        "No LeetCode.",
+        "No whiteboard interview or whiteboard algorithms.",
+        "No take-home assignment and no take-home.",
+        "No overtime, no mandatory overtime, and no work on weekends.",
+      ].join(" "),
+    );
+
+    expect(result.hardBlockers).toHaveLength(0);
+    expect(result.concerns).toHaveLength(0);
+    expect(result.score).toBe(0);
+  });
+
+  it("still detects unnegated negative interview and overtime signals", () => {
+    const result = analyzeJobAdvert(
+      [
+        "The process includes LeetCode, a whiteboard interview, and a take-home assignment.",
+        "The role requires mandatory overtime and work on weekends.",
+      ].join(" "),
+    );
+
+    expect(result.recommendation).toBe("DO_NOT_APPLY");
+    expect(result.hardBlockers.map((rule) => rule.id)).toEqual([
+      "hard-blocker-leetcode-interview",
+      "hard-blocker-whiteboard-interview",
+      "hard-blocker-take-home-assignment",
+      "hard-blocker-mandatory-overtime",
+    ]);
+  });
+
+  it("does not include removed ambiguous concern rules", () => {
+    const result = analyzeJobAdvert(
+      "We offer a competitive salary and no overtime expectations.",
+    );
+
+    expect(result.hardBlockers).toHaveLength(0);
+    expect(result.concerns).toHaveLength(0);
+    expect(result.score).toBe(0);
+  });
+
+  it("returns APPLY for the Senior Product Engineer TypeScript advert", () => {
+    const result = analyzeJobAdvert(
+      [
+        "Senior Product Engineer (TypeScript)",
+        "We are looking for a product-minded engineer to own features end-to-end with autonomy and feature ownership.",
+        "You will build REST APIs and backend API integrations on Node.js and TypeScript.",
+        "Our PostgreSQL schema, database schema, data model, and migrations matter a lot.",
+        "The team uses Playwright, automated testing, integration tests, unit tests, and code review.",
+        "You will improve internal tooling, developer productivity, and engineering productivity.",
+        "We ship with GitHub Actions, CI/CD, continuous integration, and continuous deployment.",
+        "We are a remote-first hybrid small engineering team inside a product team.",
+        "The product is financial software for a finance platform with analytics, planning, and forecasting.",
+        "The team uses GitHub Copilot, Claude Code, and AI-assisted development.",
+        "Salary range, flexible hours, a learning budget, and health insurance are included.",
+      ].join(" "),
+    );
+
+    expect(result.recommendation).toBe("APPLY");
+    expect(result.hardBlockers).toHaveLength(0);
+    expect(result.concerns).toHaveLength(0);
+    expect(result.strongPositives.length).toBeGreaterThanOrEqual(10);
+    expect(result.strongPositives.map((rule) => rule.label)).toEqual(
+      expect.arrayContaining(["Product Engineer", "PostgreSQL", "API Design"]),
+    );
+    expect(result.explanation).toContain(
+      [
+        "Recommendation: APPLY",
+        "",
+        "Reasoning:",
+        "",
+        "Strong positives",
+      ].join("\n"),
+    );
+    expect(result.explanation).toContain("Concerns\n- None");
+    expect(result.explanation).toContain("Hard blockers\n- None");
+  });
+
+  it("returns DO_NOT_APPLY for the enterprise Java consulting advert", () => {
+    const result = analyzeJobAdvert(
+      [
+        "Enterprise Java consulting role for a customer site delivery team.",
+        "This is a fixed term contract and an onsite office only position.",
+        "Travel required with frequent travel and regular travel to client sites.",
+        "The rota includes on-call duty and 24/7 support.",
+        "Candidates must relocate before starting.",
+        "The interview process includes LeetCode, a whiteboard interview, and a take-home assignment.",
+        "The role requires mandatory overtime and work on weekends.",
+        "The stack includes Java EE, J2EE, SOAP, WebSphere, and legacy systems.",
+      ].join(" "),
+    );
+
+    expect(result.recommendation).toBe("DO_NOT_APPLY");
+    expect(result.hardBlockers.length).toBeGreaterThanOrEqual(3);
+    expect(result.concerns.length).toBeGreaterThanOrEqual(2);
   });
 });

@@ -56,11 +56,13 @@ export const defaultChecklist = checklist;
 const keywordVariationFamilies = [
   ["node js", "nodejs"],
   ["full stack", "fullstack"],
+  ["end to end", "endtoend"],
   ["postgresql", "postgres"],
   ["ci cd", "cicd"],
   ["api", "apis"],
   ["migration", "migrations"],
   ["remote first", "remotefirst"],
+  ["take home", "takehome"],
 ] as const;
 
 const keywordVariationLookup = new Map<string, readonly string[]>();
@@ -71,8 +73,22 @@ for (const family of keywordVariationFamilies) {
   }
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+interface NormalizedAdvert {
+  tokens: string[];
+}
+
+interface KeywordMatcher {
+  keyword: string;
+  matchKey: string;
+  variants: string[][];
+}
+
+interface KeywordMatch {
+  keyword: string;
+  matchKey: string;
+  startIndex: number;
+  endIndex: number;
+  variantTokens: string[];
 }
 
 function normalizeForSearch(value: string): string {
@@ -82,6 +98,14 @@ function normalizeForSearch(value: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeAdvert(value: string): NormalizedAdvert {
+  const text = normalizeForSearch(value);
+
+  return {
+    tokens: text ? text.split(" ") : [],
+  };
 }
 
 function expandKeywordVariants(keyword: string): string[] {
@@ -108,62 +132,173 @@ function expandKeywordVariants(keyword: string): string[] {
   return [...variants];
 }
 
-function buildKeywordPattern(keyword: string): { matchKey: string; pattern: RegExp } | null {
+function buildKeywordMatcher(keyword: string): KeywordMatcher | null {
   const variants = expandKeywordVariants(keyword);
 
   if (variants.length === 0) {
     return null;
   }
 
-  const sortedVariants = [...variants].sort((left, right) => right.length - left.length);
-  const pattern = sortedVariants
-    .map((variant) => escapeRegExp(variant).replace(/\s+/g, "\\s+"))
-    .join("|");
+  const variantMap = new Map<string, string[]>();
+
+  for (const variant of variants) {
+    const variantTokens = normalizeAdvert(variant).tokens;
+
+    if (variantTokens.length === 0) {
+      continue;
+    }
+
+    variantMap.set(variantTokens.join(" "), variantTokens);
+  }
 
   return {
+    keyword,
     matchKey: [...variants].sort().join("|"),
-    pattern: new RegExp(`(?:^|\\s)(?:${pattern})(?=$|\\s)`, "u"),
+    variants: [...variantMap.values()].sort((left, right) => right.length - left.length),
   };
 }
 
-function findMatchedKeywords(text: string, keywords: string[]): string[] {
+function findVariantMatches(tokens: string[], matcher: KeywordMatcher): KeywordMatch[] {
+  const matches: KeywordMatch[] = [];
+
+  for (const variantTokens of matcher.variants) {
+    if (variantTokens.length > tokens.length) {
+      continue;
+    }
+
+    for (let index = 0; index <= tokens.length - variantTokens.length; index += 1) {
+      const isMatch = variantTokens.every(
+        (token, offset) => tokens[index + offset] === token,
+      );
+
+      if (isMatch) {
+        matches.push({
+          keyword: matcher.keyword,
+          matchKey: matcher.matchKey,
+          startIndex: index,
+          endIndex: index + variantTokens.length,
+          variantTokens,
+        });
+      }
+    }
+  }
+
+  return matches.sort((left, right) => {
+    if (left.startIndex !== right.startIndex) {
+      return left.startIndex - right.startIndex;
+    }
+
+    return right.endIndex - left.endIndex;
+  });
+}
+
+const negationTokens = new Set(["no", "not", "never", "without"]);
+const negationLookbehindTokenCount = 4;
+
+function isNegativeRule(rule: ChecklistRule): boolean {
+  return rule.severity === "HARD_BLOCKER" || rule.severity === "CONCERN";
+}
+
+function matchStartsWithNegation(match: KeywordMatch): boolean {
+  const [firstToken] = match.variantTokens;
+
+  return firstToken ? negationTokens.has(firstToken) : false;
+}
+
+function hasNearbyNegation(tokens: string[], match: KeywordMatch): boolean {
+  const searchStart = Math.max(0, match.startIndex - negationLookbehindTokenCount);
+  const precedingTokens = tokens.slice(searchStart, match.startIndex);
+
+  return precedingTokens.some((token) => negationTokens.has(token));
+}
+
+function isNegatedMatch(rule: ChecklistRule, tokens: string[], match: KeywordMatch): boolean {
+  if (!isNegativeRule(rule) || matchStartsWithNegation(match)) {
+    return false;
+  }
+
+  return hasNearbyNegation(tokens, match);
+}
+
+function findMatchedKeywords(tokens: string[], rule: ChecklistRule): string[] {
   const matchedKeywords: string[] = [];
-  const seen = new Set<string>();
+  const seenMatchKeys = new Set<string>();
 
-  for (const keyword of keywords) {
-    const matcher = buildKeywordPattern(keyword);
+  for (const keyword of rule.keywords) {
+    const matcher = buildKeywordMatcher(keyword);
 
-    if (!matcher) {
+    if (!matcher || seenMatchKeys.has(matcher.matchKey)) {
       continue;
     }
 
-    if (seen.has(matcher.matchKey)) {
+    const hasUnnegatedMatch = findVariantMatches(tokens, matcher).some(
+      (match) => !isNegatedMatch(rule, tokens, match),
+    );
+
+    if (!hasUnnegatedMatch) {
       continue;
     }
 
-    if (matcher.pattern.test(text)) {
-      seen.add(matcher.matchKey);
-      matchedKeywords.push(keyword);
-    }
+    seenMatchKeys.add(matcher.matchKey);
+    matchedKeywords.push(keyword);
   }
 
   return matchedKeywords;
 }
 
-function formatKeywordList(keywords: string[]): string {
-  return keywords.join(", ");
+function formatRuleList(rules: MatchedRule[]): string[] {
+  if (rules.length === 0) {
+    return ["- None"];
+  }
+
+  return rules.map((rule) => `- ${rule.label}`);
 }
 
-function formatMatchedRules(rules: MatchedRule[]): string {
-  return rules
-    .map((rule) => {
-      const matchedKeywords = formatKeywordList(rule.matchedKeywords);
+function buildExplanation({
+  recommendation,
+  hardBlockers,
+  concerns,
+  strongPositives,
+}: Pick<
+  AnalysisResult,
+  "recommendation" | "hardBlockers" | "concerns" | "strongPositives"
+>): string {
+  return [
+    `Recommendation: ${recommendation}`,
+    "",
+    "Reasoning:",
+    "",
+    "Strong positives",
+    ...formatRuleList(strongPositives),
+    "",
+    "Concerns",
+    ...formatRuleList(concerns),
+    "",
+    "Hard blockers",
+    ...formatRuleList(hardBlockers),
+  ].join("\n");
+}
 
-      return matchedKeywords
-        ? `${rule.label} [${matchedKeywords}]`
-        : rule.label;
-    })
-    .join("; ");
+function groupMatchedRule(
+  groupedRules: Pick<
+    AnalysisResult,
+    "hardBlockers" | "concerns" | "strongPositives" | "bonuses"
+  >,
+  matchedRule: MatchedRule,
+) {
+  if (matchedRule.severity === "HARD_BLOCKER") {
+    groupedRules.hardBlockers.push(matchedRule);
+  } else if (matchedRule.severity === "CONCERN") {
+    groupedRules.concerns.push(matchedRule);
+  } else if (matchedRule.severity === "STRONG_POSITIVE") {
+    groupedRules.strongPositives.push(matchedRule);
+  } else {
+    groupedRules.bonuses.push(matchedRule);
+  }
+}
+
+function calculateScore(matchedRules: MatchedRule[]): number {
+  return matchedRules.reduce((score, rule) => score + rule.scoreDelta, 0);
 }
 
 function determineRecommendation(
@@ -197,65 +332,33 @@ function analyzeChecklist(
   jobAdvert: string,
   checklistConfig: ChecklistConfig,
 ): AnalysisResult {
-  const normalizedText = normalizeForSearch(jobAdvert);
+  const normalizedAdvert = normalizeAdvert(jobAdvert);
+  const matchedRules: MatchedRule[] = [];
   const hardBlockers: MatchedRule[] = [];
   const concerns: MatchedRule[] = [];
   const strongPositives: MatchedRule[] = [];
   const bonuses: MatchedRule[] = [];
-
-  let score = 0;
+  const groupedRules = {
+    hardBlockers,
+    concerns,
+    strongPositives,
+    bonuses,
+  };
 
   for (const rule of checklistConfig.rules) {
-    const matchedKeywords = findMatchedKeywords(normalizedText, rule.keywords);
+    const matchedKeywords = findMatchedKeywords(normalizedAdvert.tokens, rule);
 
     if (matchedKeywords.length === 0) {
       continue;
     }
 
     const matchedRule = createMatchedRule(rule, matchedKeywords);
-    score += matchedRule.scoreDelta;
-
-    if (rule.severity === "HARD_BLOCKER") {
-      hardBlockers.push(matchedRule);
-    } else if (rule.severity === "CONCERN") {
-      concerns.push(matchedRule);
-    } else if (rule.severity === "STRONG_POSITIVE") {
-      strongPositives.push(matchedRule);
-    } else {
-      bonuses.push(matchedRule);
-    }
+    matchedRules.push(matchedRule);
+    groupMatchedRule(groupedRules, matchedRule);
   }
 
+  const score = calculateScore(matchedRules);
   const recommendation = determineRecommendation(score, hardBlockers);
-  const summaryParts: string[] = [];
-
-  if (hardBlockers.length > 0) {
-    summaryParts.push(`Hard blockers: ${formatMatchedRules(hardBlockers)}.`);
-  }
-
-  if (concerns.length > 0) {
-    summaryParts.push(`Concerns: ${formatMatchedRules(concerns)}.`);
-  }
-
-  if (strongPositives.length > 0) {
-    summaryParts.push(`Strong positives: ${formatMatchedRules(strongPositives)}.`);
-  }
-
-  if (bonuses.length > 0) {
-    summaryParts.push(`Bonuses: ${formatMatchedRules(bonuses)}.`);
-  }
-
-  if (summaryParts.length === 0) {
-    summaryParts.push("No checklist items matched.");
-  }
-
-  summaryParts.push(`Score: ${score}.`);
-
-  if (hardBlockers.length > 0) {
-    summaryParts.push("Recommendation forced to DO_NOT_APPLY because a hard blocker matched.");
-  } else {
-    summaryParts.push(`Recommendation: ${recommendation}.`);
-  }
 
   return {
     recommendation,
@@ -264,7 +367,12 @@ function analyzeChecklist(
     concerns,
     strongPositives,
     bonuses,
-    explanation: summaryParts.join(" "),
+    explanation: buildExplanation({
+      recommendation,
+      hardBlockers,
+      concerns,
+      strongPositives,
+    }),
   };
 }
 

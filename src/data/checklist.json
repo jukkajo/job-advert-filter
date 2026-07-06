@@ -24,11 +24,32 @@
       "keywords": ["must relocate", "relocation required", "relocation is required"]
     },
     {
-      "id": "concern-salary-hidden",
-      "severity": "CONCERN",
-      "label": "Salary not disclosed",
-      "description": "The advert does not give a clear salary signal.",
-      "keywords": ["salary not disclosed", "no salary", "competitive salary"]
+      "id": "hard-blocker-leetcode-interview",
+      "severity": "HARD_BLOCKER",
+      "label": "LeetCode interview",
+      "description": "The interview process includes algorithm puzzle screening.",
+      "keywords": ["leetcode", "algorithm interview", "algorithmic interview"]
+    },
+    {
+      "id": "hard-blocker-whiteboard-interview",
+      "severity": "HARD_BLOCKER",
+      "label": "Whiteboard interview",
+      "description": "The interview process includes whiteboard algorithm exercises.",
+      "keywords": ["whiteboard interview", "whiteboard algorithms", "whiteboard coding"]
+    },
+    {
+      "id": "hard-blocker-take-home-assignment",
+      "severity": "HARD_BLOCKER",
+      "label": "Take-home assignment",
+      "description": "The interview process includes a take-home assignment.",
+      "keywords": ["take-home assignment", "take home assignment", "take-home", "take home"]
+    },
+    {
+      "id": "hard-blocker-mandatory-overtime",
+      "severity": "HARD_BLOCKER",
+      "label": "Mandatory overtime",
+      "description": "The role requires overtime or weekend work.",
+      "keywords": ["mandatory overtime", "work on weekends", "weekend work", "evenings and weekends"]
     },
     {
       "id": "concern-onsite-only",
@@ -59,18 +80,116 @@
       "keywords": ["on call", "on-call", "24/7 support"]
     },
     {
-      "id": "concern-overtime",
+      "id": "concern-client-consulting",
       "severity": "CONCERN",
-      "label": "Overtime expected",
-      "description": "The advert signals long hours or weekend work.",
-      "keywords": ["overtime", "long hours", "evenings and weekends"]
+      "label": "Client consulting",
+      "description": "The role centers on client consulting or staff augmentation.",
+      "keywords": ["consulting", "client site", "customer site", "staff augmentation"]
+    },
+    {
+      "id": "concern-legacy-enterprise-stack",
+      "severity": "CONCERN",
+      "label": "Legacy enterprise stack",
+      "description": "The advert emphasizes older enterprise Java technologies.",
+      "keywords": ["enterprise java", "java ee", "j2ee", "soap", "websphere", "struts", "legacy system"]
+    },
+    {
+      "id": "strong-positive-product-engineer",
+      "severity": "STRONG_POSITIVE",
+      "label": "Product Engineer",
+      "description": "The role is explicitly product engineering focused.",
+      "keywords": ["product engineer", "product-minded engineer"]
+    },
+    {
+      "id": "strong-positive-ownership",
+      "severity": "STRONG_POSITIVE",
+      "label": "Ownership",
+      "description": "The role gives engineers meaningful product ownership.",
+      "keywords": ["own features", "end-to-end", "ownership", "autonomy", "feature ownership"]
+    },
+    {
+      "id": "strong-positive-api-design",
+      "severity": "STRONG_POSITIVE",
+      "label": "API Design",
+      "description": "The role includes API design and backend API work.",
+      "keywords": ["api", "apis", "rest api", "backend api"]
+    },
+    {
+      "id": "strong-positive-postgresql",
+      "severity": "STRONG_POSITIVE",
+      "label": "PostgreSQL",
+      "description": "The role includes database schema, data model, or migration work.",
+      "keywords": ["database schema", "schema design", "data model", "postgresql schema", "postgresql", "postgres", "migrations", "migration"]
+    },
+    {
+      "id": "strong-positive-testing",
+      "severity": "STRONG_POSITIVE",
+      "label": "Testing",
+      "description": "The role values automated testing and review practices.",
+      "keywords": ["playwright", "automated testing", "code review", "integration tests", "unit tests", "testing"]
+    },
+    {
+      "id": "strong-positive-developer-productivity",
+      "severity": "STRONG_POSITIVE",
+      "label": "Developer Productivity",
+      "description": "The role includes developer experience and internal tooling work.",
+      "keywords": ["internal tooling", "developer productivity", "engineering productivity"]
+    },
+    {
+      "id": "strong-positive-ci-cd",
+      "severity": "STRONG_POSITIVE",
+      "label": "CI/CD",
+      "description": "The role includes continuous integration or deployment practices.",
+      "keywords": ["github actions", "ci/cd", "continuous integration", "continuous deployment"]
+    },
+    {
+      "id": "strong-positive-small-engineering-team",
+      "severity": "STRONG_POSITIVE",
+      "label": "Small Engineering Team",
+      "description": "The advert describes a small, lean product engineering team.",
+      "keywords": ["small engineering team", "small team", "lean team", "product team"]
+    },
+    {
+      "id": "strong-positive-financial-domain",
+      "severity": "STRONG_POSITIVE",
+      "label": "Financial Domain",
+      "description": "The product domain involves finance, planning, analytics, or forecasting.",
+      "keywords": ["financial software", "finance platform", "analytics", "planning", "forecasting"]
+    },
+    {
+      "id": "strong-positive-ai-assisted-development",
+      "severity": "STRONG_POSITIVE",
+      "label": "AI-assisted Development",
+      "description": "The team supports AI-assisted development tools.",
+      "keywords": ["github copilot", "claude code", "ai-assisted development", "ai coding assistant"]
+    },
+    {
+      "id": "strong-positive-typescript",
+      "severity": "STRONG_POSITIVE",
+      "label": "TypeScript",
+      "description": "The role uses TypeScript.",
+      "keywords": ["typescript", "type script"]
+    },
+    {
+      "id": "strong-positive-node-js",
+      "severity": "STRONG_POSITIVE",
+      "label": "Node.js",
+      "description": "The role uses Node.js.",
+      "keywords": ["node.js", "nodejs", "node"]
+    },
+    {
+      "id": "strong-positive-full-stack",
+      "severity": "STRONG_POSITIVE",
+      "label": "Full Stack",
+      "description": "The role involves full stack product engineering.",
+      "keywords": ["full stack", "full-stack", "fullstack"]
     },
     {
       "id": "strong-positive-remote-friendly",
       "severity": "STRONG_POSITIVE",
       "label": "Remote-friendly",
       "description": "The role supports remote work.",
-      "keywords": ["remote", "remote role", "remote-friendly", "work from home"]
+      "keywords": ["remote", "remote role", "remote-friendly", "remote-first", "remote first", "hybrid", "work from home"]
     },
     {
       "id": "strong-positive-salary-disclosed",

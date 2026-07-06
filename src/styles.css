@@ -289,6 +289,7 @@ textarea {
   margin: 0;
   color: var(--muted);
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 @media (min-width: 720px) {
