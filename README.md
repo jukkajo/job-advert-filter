@@ -1,34 +1,27 @@
 # Job Advert Filter
 
-Deterministic browser app for scoring job adverts with a structured keyword checklist.
+Deterministic browser app for filtering job adverts against a personal job-fit checklist.
+
+Live app: https://jukkajo.github.io/job-advert-filter/
 
 ## Features
 
-- Paste a job advert into the browser
-- Analyze it with a deterministic local engine
-- See recommendation, score, matched keywords, and explanation
+- Paste a full job advert
+- Detect hard blockers, concerns, strong positives, and bonuses
+- Produce `APPLY` / `MAYBE` / `DO NOT APPLY` recommendation
+- Show matched criteria and score
+- Criteria are stored as editable checklist config
 
-## Run locally
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+## Test and Build
 
 ```bash
+npm run test
 npm run build
 ```
-
-## Deploy
-
-Push to `main`. GitHub Actions builds the app and deploys it to GitHub Pages.
-
-## Live application
-
-https://jukkajo.github.io/job-advert-filter/
-
-## Screenshot
-
-![Job Advert Filter screenshot](docs/screenshot.png)
