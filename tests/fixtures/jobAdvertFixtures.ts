@@ -96,6 +96,28 @@ export const jobAdvertFixtures: ExpectedAnalysisFixture[] = [
     },
   },
   {
+    name: "modern engineering signal variations",
+    advert: [
+      "Technical-founder-led team building REST APIs and backend APIs.",
+      "Remote-first work with GitHub Actions, Playwright, database schema design, and migrations.",
+    ].join(" "),
+    expectedRecommendation: "APPLY",
+    expectedScore: 150,
+    expected: {
+      hardBlockers: [],
+      concerns: [],
+      strongPositives: [
+        "strong-positive-technical-founders",
+        "strong-positive-api-design",
+        "strong-positive-postgresql",
+        "strong-positive-testing",
+        "strong-positive-ci-cd",
+        "strong-positive-remote-friendly",
+      ],
+      bonuses: [],
+    },
+  },
+  {
     name: "negated interview and overtime concerns",
     advert: [
       "Remote-first role with salary range, flexible hours, automated testing, and a learning budget.",
@@ -116,6 +138,18 @@ export const jobAdvertFixtures: ExpectedAnalysisFixture[] = [
         "strong-positive-flexible-hours",
       ],
       bonuses: ["bonus-learning-budget"],
+    },
+  },
+  {
+    name: "competitive salary programming and capital false positive guard",
+    advert: "Competitive salary for programming work near the capital office.",
+    expectedRecommendation: "DO_NOT_APPLY",
+    expectedScore: 0,
+    expected: {
+      hardBlockers: [],
+      concerns: [],
+      strongPositives: [],
+      bonuses: [],
     },
   },
   {

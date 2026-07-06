@@ -101,6 +101,13 @@
       "keywords": ["product engineer", "product-minded engineer"]
     },
     {
+      "id": "strong-positive-technical-founders",
+      "severity": "STRONG_POSITIVE",
+      "label": "Technical founders",
+      "description": "The company is led by technical founders or founder-engineers.",
+      "keywords": ["technical founder", "technical founders", "technical-founder-led", "technical founder led", "founder engineer", "founder engineers"]
+    },
+    {
       "id": "strong-positive-ownership",
       "severity": "STRONG_POSITIVE",
       "label": "Ownership",
